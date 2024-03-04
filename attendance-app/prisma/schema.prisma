@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL")
+}
+
+model Student {
+  id           String @id @default(uuid())
+  name         String
+  registration String
+  photoUrl     String @map("photo_url")
+
+  classes Class[]
+
+  @@map("students")
+}
+
+model Class {
+  id           String @id @default(uuid())
+  name         String
+  abbreviation String
+  teacher      String
+  totalHours   Int    @map("total_hours")
+
+  students Student[]
+
+  @@map("classes")
+}
+
+model Attendance {
+  id       String   @id @default(uuid())
+  classId  String   @map("class_id")
+  date     DateTime
+  photoUrl String?  @map("photo_url")
+
+  @@index([classId, date])
+  @@index([date])
+  @@map("attendances")
+}
+
+model StudentAttendance {
+  id           String  @id @default(uuid())
+  studentId    String  @map("student_id")
+  attendanceId String  @map("attendance_id")
+  present      Boolean
+
+  @@index([studentId, attendanceId])
+  @@map("student_attendances")
+}
