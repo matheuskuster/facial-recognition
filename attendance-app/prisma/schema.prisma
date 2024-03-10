@@ -10,7 +10,7 @@ datasource db {
 model Student {
   id           String @id @default(uuid())
   name         String
-  registration String
+  registration String @unique
   photoUrl     String @map("photo_url")
 
   classes Class[]
