@@ -27,7 +27,7 @@ export class ClassesController {
     return { class: response };
   }
 
-  static async findALl() {
+  static async findAll() {
     const response = await prisma.class.findMany();
 
     return { classes: response };

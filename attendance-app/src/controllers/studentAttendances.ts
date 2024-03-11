@@ -23,7 +23,7 @@ export class StudentAttendancesController {
     return { studentAttendance };
   }
 
-  static async findALl() {
+  static async findAll() {
     const studentAttendances = await prisma.studentAttendance.findMany();
 
     return { studentAttendances };
