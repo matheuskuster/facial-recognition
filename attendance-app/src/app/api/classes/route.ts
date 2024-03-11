@@ -6,7 +6,7 @@ import logger from '@/logger';
 export async function GET() {
   logger.info('Fetching all classes');
 
-  const { classes } = await ClassesController.findALl();
+  const { classes } = await ClassesController.findAll();
 
   logger.info(`Fetched [${classes.length}] classes successfully`);
   return Response.json({ classes }, { status: 200 });

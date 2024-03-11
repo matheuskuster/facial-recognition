@@ -6,7 +6,7 @@ import logger from '@/logger';
 export async function GET() {
   logger.info('Fetching all students');
 
-  const { students } = await StudentsController.findALl();
+  const { students } = await StudentsController.findAll();
 
   logger.info(`Fetched [${students.length}] students successfully`);
 

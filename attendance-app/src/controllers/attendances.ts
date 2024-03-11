@@ -23,7 +23,7 @@ export class AttendancesController {
     return { attendance };
   }
 
-  static async findALl() {
+  static async findAll() {
     const attendances = await prisma.attendance.findMany();
 
     return { attendances };
