@@ -1,11 +1,11 @@
-import z from "zod";
+import z from 'zod';
 
-import { AttendancesController } from "@/controllers/attendances";
-import logger from "@/logger";
-import { ClassesController } from "@/controllers/classes";
+import { AttendancesController } from '@/controllers/attendances';
+import { ClassesController } from '@/controllers/classes';
+import logger from '@/logger';
 
 export async function GET() {
-  logger.info("Fetching all attendances");
+  logger.info('Fetching all attendances');
 
   const { attendances } = await AttendancesController.findALl();
 
@@ -21,8 +21,8 @@ export async function POST(request: Request) {
   const createAttendanceSchema = z.object({
     classId: z.string(),
     date: z.coerce.date(),
-    photoUrl: z.string().optional()
-  })
+    photoUrl: z.string().optional(),
+  });
 
   const { classId, date, photoUrl } = createAttendanceSchema.parse(data);
 
@@ -32,13 +32,12 @@ export async function POST(request: Request) {
 
   if (!foundClass) {
     logger.error(`Class with id [${classId}] not found`);
-    return Response.json({ message: "Class not found" }, { status: 404 });
+    return Response.json({ message: 'Class not found' }, { status: 404 });
   }
 
   const { attendance } = await AttendancesController.create({ classId, date, photoUrl });
 
   logger.info(`Created attendance [${attendance.id}] successfully`);
-  
+
   return Response.json({ attendance }, { status: 200 });
 }
-

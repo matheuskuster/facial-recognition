@@ -1,9 +1,9 @@
-import z from "zod";
+import z from 'zod';
 
-import logger from "@/logger";
-import { StudentAttendancesController } from "@/controllers/studentAttendances";
+import { StudentAttendancesController } from '@/controllers/studentAttendances';
+import logger from '@/logger';
 
-export async function GET(request: Request, { params } : { params : { id: string } }) {
+export async function GET(request: Request, { params }: { params: { id: string } }) {
   const { id } = params;
 
   logger.info(`Fetching student attendance with id [${id}]`);
@@ -12,7 +12,7 @@ export async function GET(request: Request, { params } : { params : { id: string
 
   if (!studentAttendance) {
     logger.error(`Student attendance with id [${id}] not found`);
-    return Response.json({ message: "Student attendance not found" }, { status: 404 });
+    return Response.json({ message: 'Student attendance not found' }, { status: 404 });
   }
 
   logger.info(`Fetched student attendance with id [${id}] successfully`);
@@ -20,15 +20,15 @@ export async function GET(request: Request, { params } : { params : { id: string
   return Response.json({ studentAttendance }, { status: 200 });
 }
 
-export async function PUT(request: Request, { params } : { params : { id: string} }) {
+export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const { id } = params;
   const data = await request.json();
 
   logger.info(`Updating student attendance with id [${id}]`);
 
   const updateStudentSchema = z.object({
-    present: z.boolean().optional()
-  })
+    present: z.boolean().optional(),
+  });
 
   const { present } = updateStudentSchema.parse(data);
 
@@ -36,16 +36,19 @@ export async function PUT(request: Request, { params } : { params : { id: string
 
   logger.info(`Updated student attendance with id [${id}] successfully`);
 
-  return Response.json({ message: "Student attendance updated", studentAttendance }, { status: 200 });
+  return Response.json(
+    { message: 'Student attendance updated', studentAttendance },
+    { status: 200 },
+  );
 }
 
-export async function DELETE(request: Request, { params } : { params : { id: string} }) {
+export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   const { id } = params;
 
   logger.info(`Deleting student attendance with id [${id}]`);
-  
+
   await StudentAttendancesController.delete(id);
 
   logger.info(`Deleted student attendance with id [${id}] successfully`);
-  return Response.json({ message: "Student attendance deleted" }, { status: 200 });
+  return Response.json({ message: 'Student attendance deleted' }, { status: 200 });
 }
