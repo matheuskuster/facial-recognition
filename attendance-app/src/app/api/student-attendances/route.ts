@@ -1,22 +1,32 @@
 import z from 'zod';
 
 import { StudentAttendancesController } from '@/controllers/studentAttendances';
+import { NotFoundError, ValidationError } from '@/errors';
+import apiError from '@/errors/apiError';
 import logger from '@/logger';
 
 export async function GET() {
   logger.info('Fetching all student attendances');
 
-  const { studentAttendances } = await StudentAttendancesController.findAll();
+  try {
+    const { studentAttendances } = await StudentAttendancesController.findAll();
 
-  logger.info(`Fetched [${studentAttendances.length}] student attendances successfully`);
+    if (studentAttendances.length === 0) {
+      throw new NotFoundError('No student attendances found');
+    }
 
-  return Response.json({ studentAttendances }, { status: 200 });
+    logger.info(`Fetched [${studentAttendances.length}] student attendances successfully`);
+
+    return Response.json({ studentAttendances }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }
 
 export async function POST(request: Request) {
-  const data = await request.json();
+  const body = await request.json();
 
-  logger.info(`Recording attendance for student [${data.studentId}]`);
+  logger.info(`Recording attendance for student [${body.studentId}]`);
 
   const createStudentAttendanceSchema = z.object({
     studentId: z.string(),
@@ -24,15 +34,25 @@ export async function POST(request: Request) {
     present: z.boolean(),
   });
 
-  const { studentId, attendanceId, present } = createStudentAttendanceSchema.parse(data);
+  const result = createStudentAttendanceSchema.safeParse(body);
 
-  const { studentAttendance } = await StudentAttendancesController.create({
-    studentId,
-    attendanceId,
-    present,
-  });
+  try {
+    if (!result.success) {
+      throw new ValidationError(`Validation error: ${result.error.message}`);
+    }
 
-  logger.info(`Recorded attendance for student [${studentId}] successfully`);
+    const { studentId, attendanceId, present } = result.data;
 
-  return Response.json({ studentAttendance }, { status: 200 });
+    const { studentAttendance } = await StudentAttendancesController.create({
+      studentId,
+      attendanceId,
+      present,
+    });
+
+    logger.info(`Recorded attendance for student [${studentId}] successfully`);
+
+    return Response.json({ studentAttendance }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }

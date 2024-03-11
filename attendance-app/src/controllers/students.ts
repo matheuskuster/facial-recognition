@@ -24,6 +24,12 @@ export class StudentsController {
     return { student };
   }
 
+  static async findByRegistration(registration: string) {
+    const student = await prisma.student.findUnique({ where: { registration } });
+
+    return student;
+  }
+
   static async findAll() {
     const students = await prisma.student.findMany();
 

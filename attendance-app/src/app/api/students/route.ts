@@ -1,22 +1,32 @@
 import z from 'zod';
 
 import { StudentsController } from '@/controllers/students';
+import { ValidationError, AlreadyExistsError, NotFoundError } from '@/errors';
+import apiError from '@/errors/apiError';
 import logger from '@/logger';
 
 export async function GET() {
   logger.info('Fetching all students');
 
-  const { students } = await StudentsController.findAll();
+  try {
+    const { students } = await StudentsController.findAll();
 
-  logger.info(`Fetched [${students.length}] students successfully`);
+    if (students.length === 0) {
+      throw new NotFoundError('No students found');
+    }
 
-  return Response.json({ students }, { status: 200 });
+    logger.info(`Fetched [${students.length}] students successfully`);
+
+    return Response.json({ students }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }
 
 export async function POST(request: Request) {
-  const data = await request.json();
+  const body = await request.json();
 
-  logger.info(`Creating a new student with registration [${data.registration}]`);
+  logger.info(`Creating a new student with registration [${body.registration}]`);
 
   const createStudentSchema = z.object({
     name: z.string(),
@@ -24,11 +34,27 @@ export async function POST(request: Request) {
     photoUrl: z.string(),
   });
 
-  const { name, photoUrl, registration } = createStudentSchema.parse(data);
+  const result = createStudentSchema.safeParse(body);
 
-  const { student } = await StudentsController.create({ name, photoUrl, registration });
+  try {
+    if (!result.success) {
+      throw new ValidationError(`Validation error: ${result.error.message}`);
+    }
 
-  logger.info(`Created student with registration [${registration}] successfully`);
+    const { name, registration, photoUrl } = result.data;
 
-  return Response.json({ student }, { status: 200 });
+    const aldeadyExists = await StudentsController.findByRegistration(registration);
+
+    if (aldeadyExists !== null) {
+      throw new AlreadyExistsError(`Student with registration [${registration}] already exists`);
+    }
+
+    const { student } = await StudentsController.create({ name, photoUrl, registration });
+
+    logger.info(`Created student with registration [${registration}] successfully`);
+
+    return Response.json({ student }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }
