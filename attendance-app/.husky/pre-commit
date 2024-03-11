@@ -1,0 +1,2 @@
+cd attendance-app
+pnpm lint

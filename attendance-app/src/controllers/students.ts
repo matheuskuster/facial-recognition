@@ -1,4 +1,4 @@
-import prisma from "@/lib/prisma";
+import prisma from '@/lib/prisma';
 
 interface CreateStudent {
   name: string;
@@ -13,13 +13,13 @@ interface UpdateStudent {
 
 export class StudentsController {
   static async create(params: CreateStudent) {
-    const student = await prisma.student.create({data: params});
+    const student = await prisma.student.create({ data: params });
 
     return { student };
   }
 
   static async find(id: string) {
-    const student = await prisma.student.findUnique({where: {id}});
+    const student = await prisma.student.findUnique({ where: { id } });
 
     return { student };
   }
@@ -31,12 +31,12 @@ export class StudentsController {
   }
 
   static async update(id: string, params: UpdateStudent) {
-    const student = await prisma.student.update({where: {id}, data: params});
+    const student = await prisma.student.update({ where: { id }, data: params });
 
     return { student };
   }
 
   static async delete(id: string) {
-    await prisma.student.delete({where: {id}});
+    await prisma.student.delete({ where: { id } });
   }
 }

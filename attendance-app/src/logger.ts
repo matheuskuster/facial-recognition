@@ -39,7 +39,7 @@ function getLogger() {
       }),
       format.errors({ stack: true }),
       format.splat(),
-      format.combine(label(), timestamp(), format.splat(), consoleFormat)
+      format.combine(label(), timestamp(), format.splat(), consoleFormat),
     ),
     defaultMeta: { service: 'attendance-app' },
     transports: [consoleTransport],

@@ -1,10 +1,10 @@
-import z from "zod";
+import z from 'zod';
 
-import logger from "@/logger";
-import { ClassesController } from "@/controllers/classes";
+import { ClassesController } from '@/controllers/classes';
+import logger from '@/logger';
 
 export async function GET() {
-  logger.info("Fetching all classes");
+  logger.info('Fetching all classes');
 
   const { classes } = await ClassesController.findALl();
 
@@ -18,18 +18,22 @@ export async function POST(request: Request) {
   logger.info(`Creating a new class [${data.name}]`);
 
   const createStudentSchema = z.object({
-    name: z.string(), 
+    name: z.string(),
     abbreviation: z.string(),
     teacher: z.string(),
-    totalHours: z.number().min(1)
-  })
+    totalHours: z.number().min(1),
+  });
 
   const { name, abbreviation, teacher, totalHours } = createStudentSchema.parse(data);
 
-  const { class: response } = await ClassesController.create({ name, abbreviation, teacher, totalHours });
+  const { class: response } = await ClassesController.create({
+    name,
+    abbreviation,
+    teacher,
+    totalHours,
+  });
 
   logger.info(`Created class [${response.name}] successfully`);
-  
+
   return Response.json({ class: response }, { status: 200 });
 }
-
