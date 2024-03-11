@@ -1,6 +1,8 @@
 import z from 'zod';
 
 import { StudentsController } from '@/controllers/students';
+import { NotFoundError, ValidationError } from '@/errors';
+import apiError from '@/errors/apiError';
 import logger from '@/logger';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
@@ -8,21 +10,24 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
   logger.info(`Fetching student with id [${id}]`);
 
-  const { student } = await StudentsController.find(id);
+  try {
+    const { student } = await StudentsController.find(id);
 
-  if (!student) {
-    logger.error(`Student with id [${id}] not found`);
-    return Response.json({ message: 'Student not found' }, { status: 404 });
+    if (!student) {
+      throw new NotFoundError(`Student with id [${id}] not found`);
+    }
+
+    logger.info(`Fetched student with id [${id}] successfully`);
+
+    return Response.json({ student }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
   }
-
-  logger.info(`Fetched student with id [${id}] successfully`);
-
-  return Response.json({ student }, { status: 200 });
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const { id } = params;
-  const data = await request.json();
+  const body = await request.json();
 
   logger.info(`Updating student with id [${id}]`);
 
@@ -31,13 +36,29 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     photoUrl: z.string().optional(),
   });
 
-  const { name, photoUrl } = updateStudentSchema.parse(data);
+  const result = updateStudentSchema.safeParse(body);
 
-  const { student } = await StudentsController.update(id, { name, photoUrl });
+  try {
+    if (!result.success) {
+      throw new ValidationError(`Validation error: ${result.error.message}`);
+    }
 
-  logger.info(`Updated student with id [${id}] successfully`);
+    const { name, photoUrl } = result.data;
 
-  return Response.json({ message: 'Student updated', student }, { status: 200 });
+    const foundStudent = await StudentsController.find(id);
+
+    if (!foundStudent.student) {
+      throw new NotFoundError(`Student with id [${id}] not found`);
+    }
+
+    const { student } = await StudentsController.update(id, { name, photoUrl });
+
+    logger.info(`Updated student with id [${id}] successfully`);
+
+    return Response.json({ message: 'Student updated', student }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
@@ -45,9 +66,19 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
   logger.info(`Deleting student with id [${id}]`);
 
-  await StudentsController.delete(id);
+  try {
+    const foundStudent = await StudentsController.find(id);
 
-  logger.info(`Deleted student with id [${id}] successfully`);
+    if (!foundStudent.student) {
+      throw new NotFoundError(`Student with id [${id}] not found`);
+    }
 
-  return Response.json({ message: 'Student deleted' }, { status: 200 });
+    await StudentsController.delete(id);
+
+    logger.info(`Deleted student with id [${id}] successfully`);
+
+    return Response.json({ message: 'Student deleted', student: foundStudent }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }

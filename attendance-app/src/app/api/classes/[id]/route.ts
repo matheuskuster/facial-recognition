@@ -1,6 +1,8 @@
 import z from 'zod';
 
 import { ClassesController } from '@/controllers/classes';
+import { NotFoundError, ValidationError } from '@/errors';
+import apiError from '@/errors/apiError';
 import logger from '@/logger';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
@@ -8,21 +10,24 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
   logger.info(`Fetching class with id [${id}]`);
 
-  const { class: response } = await ClassesController.find(id);
+  try {
+    const { class: response } = await ClassesController.find(id);
 
-  if (!response) {
-    logger.error(`Class with id [${id}] not found`);
-    return Response.json({ message: 'Class not found' }, { status: 404 });
+    if (!response) {
+      throw new NotFoundError(`Class with id [${id}] not found`);
+    }
+
+    logger.info(`Fetched class with id [${id}] successfully`);
+
+    return Response.json({ class: response }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
   }
-
-  logger.info(`Fetched class with id [${id}] successfully`);
-
-  return Response.json({ class: response }, { status: 200 });
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
   const { id } = params;
-  const data = await request.json();
+  const body = await request.json();
 
   logger.info(`Updating class with id [${id}]`);
 
@@ -33,18 +38,34 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     totalHours: z.number().optional(),
   });
 
-  const { name, abbreviation, teacher, totalHours } = updateclassSchema.parse(data);
+  const result = updateclassSchema.safeParse(body);
 
-  const { class: response } = await ClassesController.update(id, {
-    name,
-    abbreviation,
-    teacher,
-    totalHours,
-  });
+  try {
+    if (!result.success) {
+      throw new ValidationError(`Validation error: ${result.error.message}`);
+    }
 
-  logger.info(`Updated class with id [${id}] successfully`);
+    const { name, abbreviation, teacher, totalHours } = result.data;
 
-  return Response.json({ message: 'Class updated', class: response }, { status: 200 });
+    const foundClass = await ClassesController.find(id);
+
+    if (!foundClass.class) {
+      throw new NotFoundError(`Class with id [${id}] not found`);
+    }
+
+    const { class: response } = await ClassesController.update(id, {
+      name,
+      abbreviation,
+      teacher,
+      totalHours,
+    });
+
+    logger.info(`Updated class with id [${id}] successfully`);
+
+    return Response.json({ message: 'Class updated', class: response }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
@@ -52,9 +73,19 @@ export async function DELETE(request: Request, { params }: { params: { id: strin
 
   logger.info(`Deleting class with id [${id}]`);
 
-  await ClassesController.delete(id);
+  try {
+    const foundClass = await ClassesController.find(id);
 
-  logger.info(`Deleted class with id [${id}] successfully`);
+    if (!foundClass.class) {
+      throw new NotFoundError(`Class with id [${id}] not found`);
+    }
 
-  return Response.json({ message: 'Class deleted' }, { status: 200 });
+    await ClassesController.delete(id);
+
+    logger.info(`Deleted class with id [${id}] successfully`);
+
+    return Response.json({ message: 'Class deleted', class: foundClass }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }

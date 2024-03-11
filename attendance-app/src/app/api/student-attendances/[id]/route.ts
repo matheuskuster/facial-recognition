@@ -1,6 +1,8 @@
 import z from 'zod';
 
 import { StudentAttendancesController } from '@/controllers/studentAttendances';
+import { NotFoundError, ValidationError } from '@/errors';
+import apiError from '@/errors/apiError';
 import logger from '@/logger';
 
 export async function GET(request: Request, { params }: { params: { id: string } }) {
@@ -8,16 +10,19 @@ export async function GET(request: Request, { params }: { params: { id: string }
 
   logger.info(`Fetching student attendance with id [${id}]`);
 
-  const { studentAttendance } = await StudentAttendancesController.find(id);
+  try {
+    const { studentAttendance } = await StudentAttendancesController.find(id);
 
-  if (!studentAttendance) {
-    logger.error(`Student attendance with id [${id}] not found`);
-    return Response.json({ message: 'Student attendance not found' }, { status: 404 });
+    if (!studentAttendance) {
+      throw new NotFoundError(`Student attendance with id [${id}] not found`);
+    }
+
+    logger.info(`Fetched student attendance with id [${id}] successfully`);
+
+    return Response.json({ studentAttendance }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
   }
-
-  logger.info(`Fetched student attendance with id [${id}] successfully`);
-
-  return Response.json({ studentAttendance }, { status: 200 });
 }
 
 export async function PUT(request: Request, { params }: { params: { id: string } }) {
@@ -30,25 +35,48 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     present: z.boolean().optional(),
   });
 
-  const { present } = updateStudentSchema.parse(data);
+  const result = updateStudentSchema.safeParse(data);
 
-  const { studentAttendance } = await StudentAttendancesController.update(id, { present });
+  try {
+    if (!result.success) {
+      throw new ValidationError(`Validation error: ${result.error.message}`);
+    }
 
-  logger.info(`Updated student attendance with id [${id}] successfully`);
+    const { present } = result.data;
 
-  return Response.json(
-    { message: 'Student attendance updated', studentAttendance },
-    { status: 200 },
-  );
+    const { studentAttendance } = await StudentAttendancesController.update(id, { present });
+
+    logger.info(`Updated student attendance with id [${id}] successfully`);
+
+    return Response.json(
+      { message: 'Student attendance updated', studentAttendance },
+      { status: 200 },
+    );
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }
 
 export async function DELETE(request: Request, { params }: { params: { id: string } }) {
   const { id } = params;
 
   logger.info(`Deleting student attendance with id [${id}]`);
+  try {
+    const foundStudentAttendance = await StudentAttendancesController.find(id);
 
-  await StudentAttendancesController.delete(id);
+    if (!foundStudentAttendance.studentAttendance) {
+      throw new NotFoundError(`Student attendance with id [${id}] not found`);
+    }
 
-  logger.info(`Deleted student attendance with id [${id}] successfully`);
-  return Response.json({ message: 'Student attendance deleted' }, { status: 200 });
+    await StudentAttendancesController.delete(id);
+
+    logger.info(`Deleted student attendance with id [${id}] successfully`);
+
+    return Response.json(
+      { message: 'Student attendance deleted', studentAttendance: foundStudentAttendance },
+      { status: 200 },
+    );
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }

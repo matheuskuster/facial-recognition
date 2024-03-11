@@ -1,21 +1,32 @@
 import z from 'zod';
 
 import { ClassesController } from '@/controllers/classes';
+import { NotFoundError, ValidationError } from '@/errors';
+import apiError from '@/errors/apiError';
 import logger from '@/logger';
 
 export async function GET() {
   logger.info('Fetching all classes');
 
-  const { classes } = await ClassesController.findAll();
+  try {
+    const { classes } = await ClassesController.findAll();
 
-  logger.info(`Fetched [${classes.length}] classes successfully`);
-  return Response.json({ classes }, { status: 200 });
+    if (classes.length === 0) {
+      throw new NotFoundError('No classes found');
+    }
+
+    logger.info(`Fetched [${classes.length}] classes successfully`);
+
+    return Response.json({ classes }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }
 
 export async function POST(request: Request) {
-  const data = await request.json();
+  const body = await request.json();
 
-  logger.info(`Creating a new class [${data.name}]`);
+  logger.info(`Creating a new class [${body.name}]`);
 
   const createStudentSchema = z.object({
     name: z.string(),
@@ -24,16 +35,26 @@ export async function POST(request: Request) {
     totalHours: z.number().min(1),
   });
 
-  const { name, abbreviation, teacher, totalHours } = createStudentSchema.parse(data);
+  const result = createStudentSchema.safeParse(body);
 
-  const { class: response } = await ClassesController.create({
-    name,
-    abbreviation,
-    teacher,
-    totalHours,
-  });
+  try {
+    if (!result.success) {
+      throw new ValidationError(`Validation error: ${result.error.message}`);
+    }
 
-  logger.info(`Created class [${response.name}] successfully`);
+    const { name, abbreviation, teacher, totalHours } = result.data;
 
-  return Response.json({ class: response }, { status: 200 });
+    const { class: response } = await ClassesController.create({
+      name,
+      abbreviation,
+      teacher,
+      totalHours,
+    });
+
+    logger.info(`Created class [${response.name}] successfully`);
+
+    return Response.json({ class: response }, { status: 200 });
+  } catch (error) {
+    return apiError(error as Error);
+  }
 }
