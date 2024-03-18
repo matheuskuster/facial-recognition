@@ -1,22 +1,31 @@
 import prisma from '@/lib/prisma';
 
-interface Createclass {
+interface CreateClass {
   name: string;
   abbreviation: string;
   teacher: string;
   totalHours: number;
+  students: string[];
 }
 
-interface Updateclass {
+interface UpdateClass {
   name?: string;
   abbreviation?: string;
   teacher?: string;
   totalHours?: number;
+  students?: string[];
 }
 
 export class ClassesController {
-  static async create(params: Createclass) {
-    const response = await prisma.class.create({ data: params });
+  static async create(params: CreateClass) {
+    const response = await prisma.class.create({
+      data: {
+        ...params,
+        students: {
+          connect: params.students.map((id) => ({ id })),
+        },
+      },
+    });
 
     return { class: response };
   }
@@ -33,8 +42,16 @@ export class ClassesController {
     return { classes: response };
   }
 
-  static async update(id: string, params: Updateclass) {
-    const response = await prisma.class.update({ where: { id }, data: params });
+  static async update(id: string, params: UpdateClass) {
+    const response = await prisma.class.update({
+      where: { id },
+      data: {
+        ...params,
+        students: {
+          connect: params?.students?.map((id) => ({ id })),
+        },
+      },
+    });
 
     return { class: response };
   }

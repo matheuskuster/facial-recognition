@@ -31,9 +31,16 @@ export class StudentsController {
   }
 
   static async findAll() {
-    const students = await prisma.student.findMany();
+    const students = await prisma.student.findMany({
+      include: { classes: true },
+    });
 
-    return { students };
+    return {
+      students: students.map((student) => ({
+        ...student,
+        classes: student.classes.map((c) => c.abbreviation),
+      })),
+    };
   }
 
   static async update(id: string, params: UpdateStudent) {

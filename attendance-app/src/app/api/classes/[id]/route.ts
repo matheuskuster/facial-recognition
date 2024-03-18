@@ -36,6 +36,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
     abbreviation: z.string().optional(),
     teacher: z.string().optional(),
     totalHours: z.number().optional(),
+    students: z.array(z.string()).optional(),
   });
 
   const result = updateclassSchema.safeParse(body);
@@ -45,7 +46,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       throw new ValidationError(`Validation error: ${result.error.message}`);
     }
 
-    const { name, abbreviation, teacher, totalHours } = result.data;
+    const { name, abbreviation, teacher, totalHours, students } = result.data;
 
     const foundClass = await ClassesController.find(id);
 
@@ -58,6 +59,7 @@ export async function PUT(request: Request, { params }: { params: { id: string }
       abbreviation,
       teacher,
       totalHours,
+      students,
     });
 
     logger.info(`Updated class with id [${id}] successfully`);

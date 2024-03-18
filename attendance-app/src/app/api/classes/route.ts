@@ -28,27 +28,29 @@ export async function POST(request: Request) {
 
   logger.info(`Creating a new class [${body.name}]`);
 
-  const createStudentSchema = z.object({
+  const createClassSchema = z.object({
     name: z.string(),
     abbreviation: z.string(),
     teacher: z.string(),
     totalHours: z.number().min(1),
+    students: z.array(z.string()),
   });
 
-  const result = createStudentSchema.safeParse(body);
+  const result = createClassSchema.safeParse(body);
 
   try {
     if (!result.success) {
       throw new ValidationError(`Validation error: ${result.error.message}`);
     }
 
-    const { name, abbreviation, teacher, totalHours } = result.data;
+    const { name, abbreviation, teacher, totalHours, students } = result.data;
 
     const { class: response } = await ClassesController.create({
       name,
       abbreviation,
       teacher,
       totalHours,
+      students,
     });
 
     logger.info(`Created class [${response.name}] successfully`);

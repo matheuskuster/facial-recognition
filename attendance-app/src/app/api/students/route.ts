@@ -1,5 +1,6 @@
 import z from 'zod';
 
+import { S3Controller } from '@/controllers/s3';
 import { StudentsController } from '@/controllers/students';
 import { ValidationError, AlreadyExistsError, NotFoundError } from '@/errors';
 import apiError from '@/errors/apiError';
@@ -24,24 +25,28 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json();
+  const body = await request.formData();
 
-  logger.info(`Creating a new student with registration [${body.registration}]`);
+  logger.info(`Creating a new student with registration [${body.get('registration')}]`);
 
   const createStudentSchema = z.object({
     name: z.string(),
     registration: z.string(),
-    photoUrl: z.string(),
+    photo: z.instanceof(File),
   });
 
-  const result = createStudentSchema.safeParse(body);
+  const result = createStudentSchema.safeParse({
+    name: body.get('name'),
+    registration: body.get('registration'),
+    photo: body.get('photo'),
+  });
 
   try {
     if (!result.success) {
       throw new ValidationError(`Validation error: ${result.error.message}`);
     }
 
-    const { name, registration, photoUrl } = result.data;
+    const { name, registration } = result.data;
 
     const aldeadyExists = await StudentsController.findByRegistration(registration);
 
@@ -49,7 +54,9 @@ export async function POST(request: Request) {
       throw new AlreadyExistsError(`Student with registration [${registration}] already exists`);
     }
 
-    const { student } = await StudentsController.create({ name, photoUrl, registration });
+    const { url } = await S3Controller.uploadFile(result.data.photo);
+
+    const { student } = await StudentsController.create({ name, photoUrl: url, registration });
 
     logger.info(`Created student with registration [${registration}] successfully`);
 
