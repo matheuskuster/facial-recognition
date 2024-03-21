@@ -16,10 +16,7 @@ import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { toast } from 'sonner';
 
-import { FileDropzone } from './file-dropzone';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
-
-import { Badge } from '@/components/ui/badge';
+// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -42,18 +39,21 @@ import {
 } from '@/components/ui/table';
 import { api } from '@/services/api';
 
-export type Class={
+export type Class = {
   id: string;
   name: string;
+  abbreviation: string;
+  teacher: string;
+  totalHours: number;
   students: string[];
-}
+};
 
 export const columns: ColumnDef<Class>[] = [
-  {
-    accessorKey: 'registration',
-    header: 'Matrícula',
-    cell: ({ row }) => <p className="capitalize font-bold ">{row.getValue('registration')}</p>,
-  },
+  // {
+  //   accessorKey: 'registration',
+  //   header: 'Matrícula',
+  //   cell: ({ row }) => <p className="capitalize font-bold ">{row.getValue('registration')}</p>,
+  // },
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -69,17 +69,15 @@ export const columns: ColumnDef<Class>[] = [
       );
     },
     cell: ({ row }) => {
-      const name = row.original.name
+      const name = row.original.name;
 
-    //   const initials = !lastName
-    //     ? `${firstName[0]}${firstName[1]}`
-    //     : `${firstName[0]}${lastName[0]}`;
+      //   const initials = !lastName
+      //     ? `${firstName[0]}${firstName[1]}`
+      //     : `${firstName[0]}${lastName[0]}`;
 
       return (
         <div className="flex items-center space-x-2">
-          <p className="w-10 h-10">
-            {name}
-          </p>
+          <p className="w-10 h-10">{name}</p>
           <div>{row.getValue('name')}</div>
         </div>
       );
@@ -91,25 +89,66 @@ export const columns: ColumnDef<Class>[] = [
     },
   },
   {
-    accessorKey: 'students',
-    header: 'Alunos',
+    accessorKey: 'abbreviation',
+    header: 'Abreviação',
     cell: ({ row }) => {
-      const classes = row.getValue('classes') as string[];
-
-      const diff = classes.length - 3;
+      const abbr = row.getValue('abbreviation') as string;
 
       return (
-        <div className="flex space-x-1">
-          {classes.slice(0, 3).map((abbreviation) => (
-            <Badge variant="secondary" key={abbreviation}>
-              {abbreviation}
-            </Badge>
-          ))}
-          {diff > 0 && <Badge variant="secondary">+{diff}</Badge>}
+        <div className="flex items-center space-x-2">
+          <p className="w-10 h-10">{abbr}</p>
+          <div>{row.getValue('abbreviation')}</div>
         </div>
       );
     },
   },
+  {
+    accessorKey: 'teacher',
+    header: 'Professor',
+    cell: ({ row }) => {
+      const teachers = row.getValue('teacher') as string;
+
+      return (
+        <div className="flex items-center space-x-2">
+          <p className="w-10 h-10">{teachers}</p>
+          <div>{row.getValue('teachers')}</div>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: 'totalHours',
+    header: 'Total de Horas',
+    cell: ({ row }) => {
+      const totalHours = row.getValue('totalHours') as number;
+      return (
+        <div className="flex items-center space-x-2">
+          <p className="w-10 h-10">{totalHours}</p>
+          <div>{row.getValue('totalHours')}</div>
+        </div>
+      );
+    },
+  },
+  // {
+  //   accessorKey: 'students',
+  //   header: 'Alunos',
+  //   cell: ({ row }) => {
+  //     const students = row.getValue('students') as string[];
+
+  //     const diff = students.length - 3;
+
+  //     return (
+  //       <div className="flex space-x-1">
+  //         {students.slice(0, 3).map((name) => (
+  //           <Badge variant="secondary" key={name}>
+  //             {name}
+  //           </Badge>
+  //         ))}
+  //         {diff > 0 && <Badge variant="secondary">+{diff}</Badge>}
+  //       </div>
+  //     );
+  //   },
+  // },
 ];
 
 type ClassesTableProps = {
@@ -123,8 +162,16 @@ export function ClassesTable({ classes }: ClassesTableProps) {
 
   const [newClass, setNewClass] = React.useState<{
     name: string;
+    abbreviation: string;
+    teacher: string;
+    totalHours: number;
+    students: string[];
   }>({
     name: '',
+    abbreviation: '',
+    teacher: '',
+    totalHours: 0,
+    students: [],
   });
 
   const [sorting, setSorting] = React.useState<SortingState>([]);
@@ -172,6 +219,10 @@ export function ClassesTable({ classes }: ClassesTableProps) {
 
       setNewClass({
         name: '',
+        abbreviation: '',
+        teacher: '',
+        totalHours: 0,
+        students: [],
       });
 
       setIsCreateDialogOpen(false);
@@ -215,11 +266,35 @@ export function ClassesTable({ classes }: ClassesTableProps) {
                 </Label>
                 <Input
                   id="name"
-                  placeholder="CC6M"
+                  placeholder="Ciência da Computação 6 Matutino"
                   className="col-span-3"
                   value={newClass?.name}
                   onChange={(event) =>
                     setNewClass((prev) => ({ ...prev, name: event.target.value }))
+                  }
+                />
+                <Label htmlFor="abbreviation" className="text-right">
+                  Abreviação
+                </Label>
+                <Input
+                  id="abbreviation"
+                  placeholder="CC6M"
+                  className="col-span-3"
+                  value={newClass?.abbreviation}
+                  onChange={(event) =>
+                    setNewClass((prev) => ({ ...prev, abbreviation: event.target.value }))
+                  }
+                />
+                <Label htmlFor="professor" className="text-right">
+                  Professor
+                </Label>
+                <Input
+                  id="professor"
+                  placeholder="Abrantes"
+                  className="col-span-3"
+                  value={newClass?.teacher}
+                  onChange={(event) =>
+                    setNewClass((prev) => ({ ...prev, teacher: event.target.value }))
                   }
                 />
               </div>
