@@ -77,7 +77,7 @@ export const columns: ColumnDef<Class>[] = [
 
       return (
         <div className="flex items-center space-x-2">
-          <p className="w-10 h-10">{name}</p>
+          {/* <p className="w-10 h-10">{name}</p> */}
           <div>{row.getValue('name')}</div>
         </div>
       );
@@ -96,7 +96,7 @@ export const columns: ColumnDef<Class>[] = [
 
       return (
         <div className="flex items-center space-x-2">
-          <p className="w-10 h-10">{abbr}</p>
+          {/* <p className="w-10 h-10">{abbr}</p> */}
           <div>{row.getValue('abbreviation')}</div>
         </div>
       );
@@ -111,7 +111,7 @@ export const columns: ColumnDef<Class>[] = [
       return (
         <div className="flex items-center space-x-2">
           <p className="w-10 h-10">{teachers}</p>
-          <div>{row.getValue('teachers')}</div>
+          {/* <div>{row.getValue('teachers')}</div> */}
         </div>
       );
     },
@@ -123,7 +123,7 @@ export const columns: ColumnDef<Class>[] = [
       const totalHours = row.getValue('totalHours') as number;
       return (
         <div className="flex items-center space-x-2">
-          <p className="w-10 h-10">{totalHours}</p>
+          {/* <p className="w-10 h-10">{totalHours}</p> */}
           <div>{row.getValue('totalHours')}</div>
         </div>
       );
