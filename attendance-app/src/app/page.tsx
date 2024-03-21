@@ -1,23 +1,28 @@
-'use client';
+import { Attendance as AttendanceType, AttendancesTable } from '@/components/attendances-tabe';
+import { SectionHeader } from '@/components/section-header';
+import { api } from '@/services/api';
 
-import { usePathname, useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+async function fetchAttendances(): Promise<AttendanceType[]> {
+  try {
+    const response = await api.get('/attendances');
+    return response.data.attendances as AttendanceType[];
+  } catch (error) {
+    console.error('Failed to fetch attendances', error);
+    return [];
+  }
+}
 
-import { Spinner } from '@/components/spinner';
-
-export default function Home() {
-  const router = useRouter();
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (pathname === '/') {
-      router.push('/attendances');
-    }
-  }, [pathname]);
-
+export default async function Home() {
+  const attendances = await fetchAttendances();
   return (
-    <div className="w-full h-full flex items-center justify-center">
-      <Spinner className="h-12 w-12" />
+    <div className="w-full h-full p-12">
+      <SectionHeader
+        title="Presenças"
+        description="Aqui você pode visualizar as Chamadas cadastradas"
+      />
+      <main>
+        <AttendancesTable attendances={attendances} />
+      </main>
     </div>
   );
 }
