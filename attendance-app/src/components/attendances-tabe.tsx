@@ -200,7 +200,7 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
                 </Label>
                 <Input
                   id="classId"
-                  placeholder="Pedro Duarte"
+                  placeholder="0a0a0a-0a0a0a0a-0a0a0a0a-0a0a0a0"
                   className="col-span-3"
                   value={newAttendance?.classId}
                   onChange={(event) =>
@@ -214,7 +214,7 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
                 </Label>
                 <Input
                   id="date"
-                  placeholder="202197440"
+                  placeholder="2024-03-21"
                   className="col-span-3"
                   value={newAttendance?.date}
                   onChange={(event) =>

@@ -69,12 +69,6 @@ export const columns: ColumnDef<Class>[] = [
       );
     },
     cell: ({ row }) => {
-      const name = row.original.name;
-
-      //   const initials = !lastName
-      //     ? `${firstName[0]}${firstName[1]}`
-      //     : `${firstName[0]}${lastName[0]}`;
-
       return (
         <div className="flex items-center space-x-2">
           {/* <p className="w-10 h-10">{name}</p> */}
@@ -92,7 +86,7 @@ export const columns: ColumnDef<Class>[] = [
     accessorKey: 'abbreviation',
     header: 'Abreviação',
     cell: ({ row }) => {
-      const abbr = row.getValue('abbreviation') as string;
+      // const abbr = row.getValue('abbreviation') as string;
 
       return (
         <div className="flex items-center space-x-2">
@@ -120,7 +114,7 @@ export const columns: ColumnDef<Class>[] = [
     accessorKey: 'totalHours',
     header: 'Total de Horas',
     cell: ({ row }) => {
-      const totalHours = row.getValue('totalHours') as number;
+      // const totalHours = row.getValue('totalHours') as number;
       return (
         <div className="flex items-center space-x-2">
           {/* <p className="w-10 h-10">{totalHours}</p> */}
@@ -129,26 +123,6 @@ export const columns: ColumnDef<Class>[] = [
       );
     },
   },
-  // {
-  //   accessorKey: 'students',
-  //   header: 'Alunos',
-  //   cell: ({ row }) => {
-  //     const students = row.getValue('students') as string[];
-
-  //     const diff = students.length - 3;
-
-  //     return (
-  //       <div className="flex space-x-1">
-  //         {students.slice(0, 3).map((name) => (
-  //           <Badge variant="secondary" key={name}>
-  //             {name}
-  //           </Badge>
-  //         ))}
-  //         {diff > 0 && <Badge variant="secondary">+{diff}</Badge>}
-  //       </div>
-  //     );
-  //   },
-  // },
 ];
 
 type ClassesTableProps = {
@@ -207,7 +181,9 @@ export function ClassesTable({ classes }: ClassesTableProps) {
 
     const formData = new FormData();
     formData.append('name', newClass.name);
-
+    formData.append('abbreviation', newClass.abbreviation);
+    formData.append('teacher', newClass.teacher);
+    // formData.append('totalHours', newClass.totalHours);
     try {
       await api.post('/classes', formData, {
         headers: {
@@ -297,53 +273,19 @@ export function ClassesTable({ classes }: ClassesTableProps) {
                     setNewClass((prev) => ({ ...prev, teacher: event.target.value }))
                   }
                 />
-              </div>
-              {/* <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="registration" className="text-right">
-                  Matrícula
+                {/* <Label htmlFor="totalHours" className="text-right">
+                  Total de Horas
                 </Label>
                 <Input
-                  id="registration"
-                  placeholder="202197440"
+                  id="totalHours"
+                  placeholder="80"
                   className="col-span-3"
-                  value={newStudent?.registration}
+                  value={newClass?.totalHours}
                   onChange={(event) =>
-                    setNewStudent((prev) => ({ ...prev, registration: event.target.value }))
+                    setNewClass((prev) => ({ ...prev, totalHours: event.target.value }))
                   }
-                />
-              </div> */}
-
-              {/* <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="registration" className="text-right">
-                  Imagem
-                </Label>
-                <div className="col-span-3">
-                  {newStudent.photo ? (
-                    <div className="flex items-center">
-                      <img
-                        src={URL.createObjectURL(newStudent.photo)}
-                        alt="Foto do aluno"
-                        className="w-24 h-24 rounded-full"
-                      />
-
-                      <Button
-                        variant="outline"
-                        onClick={() => setNewStudent((prev) => ({ ...prev, photo: null }))}
-                        className="ml-4"
-                      >
-                        Alterar
-                      </Button>
-                    </div>
-                  ) : (
-                    <FileDropzone
-                      onDrop={(files) => {
-                        setNewStudent((prev) => ({ ...prev, photo: files[0] }));
-                      }}
-                      multiple={false}
-                    />
-                  )}
-                </div>
-              </div> */}
+                /> */}
+              </div>
             </div>
             <DialogFooter>
               <Button disabled={isAddingClass} onClick={createClass} type="submit">
