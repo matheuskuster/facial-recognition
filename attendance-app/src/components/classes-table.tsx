@@ -195,8 +195,8 @@ export function ClassesTable({ classes }: ClassesTableProps) {
     };
 
     // console.log("Form Data: " + JSON.stringify(formData));
-    console.log("New Class: " + JSON.stringify(newClass));
-    console.log("Send Body: "+JSON.stringify(sendBody));
+    console.log('New Class: ' + JSON.stringify(newClass));
+    console.log('Send Body: ' + JSON.stringify(sendBody));
     // console.log(formData);
     console.log(newClass);
     console.log(sendBody);

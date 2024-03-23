@@ -17,7 +17,6 @@ import * as React from 'react';
 import { toast } from 'sonner';
 
 import { FileDropzone } from './file-dropzone';
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -69,18 +68,20 @@ export const columns: ColumnDef<Attendance>[] = [
       );
     },
     cell: ({ row }) => {
-      const date = row.original.date;
+        const stringDate = String(row.original.date)
+        const [date, timeAndZone] = stringDate.split('T')
+        const [year, month, day] = date.split('-')
+        const formattedDate = `${day}/${month}/${year}`
+        const [time, timeZoneCode] = timeAndZone.split('.')
+        const formattedTime = time
+        const formattedDateTime = `${formattedDate} às ${formattedTime}`
 
-      return (
-        <div className="flex items-center space-x-2">
-          <Avatar className="w-10 h-10">
-            <AvatarImage src={row.original.photoUrl} alt="Foto" className="object-cover" />
-            <AvatarFallback>{String(date)}</AvatarFallback>
-          </Avatar>
-          <div>{row.getValue('date')}</div>
-        </div>
-      );
-    },
+        return (
+        <div>
+          <p className="flex items-center space-x-2">{formattedDateTime}</p>
+          </div>
+        ) 
+      },
     filterFn: (row, _, value) => {
       const { date, classId } = row.original;
       const concat = `${date}${classId}`.toLowerCase();
@@ -100,11 +101,11 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
 
   const [newAttendance, setNewAttendance] = React.useState<{
     classId: string;
-    date: string;
+    date: Date;
     photo: File | null;
   }>({
     classId: '',
-    date: '',
+    date: new Date(),
     photo: null,
   });
 
@@ -132,7 +133,7 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
   });
 
   const createAttendance = async () => {
-    if (!newAttendance.classId || !newAttendance.date || !newAttendance.photo) {
+    if (!newAttendance.classId || !newAttendance.photo) {
       toast.warning('Preencha todos os campos');
       return;
     }
@@ -146,13 +147,13 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
 
     const sendBody = {
       classId: newAttendance.classId,
-      date: newAttendance.date,
+      date: new Date(),
       photo: newAttendance.photo,
     };
 
     // console.log("Form Data: " + JSON.stringify(formData));
-    console.log("New Class: " + JSON.stringify(newAttendance));
-    console.log("Send Body: "+JSON.stringify(sendBody));
+    console.log('New Attendance: ' + JSON.stringify(newAttendance));
+    console.log('Send Body: ' + JSON.stringify(sendBody));
     // console.log(formData);
     console.log(newAttendance);
     console.log(sendBody);
@@ -167,7 +168,7 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
 
       setNewAttendance({
         classId: '',
-        date: '',
+        date: new Date(),
         photo: null,
       });
 
@@ -220,7 +221,7 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
                   }
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
+              {/* <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="registration" className="text-right">
                   Data
                 </Label>
@@ -233,7 +234,7 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
                     setNewAttendance((prev) => ({ ...prev, date: event.target.value }))
                   }
                 />
-              </div>
+              </div> */}
 
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="photo" className="text-right">
