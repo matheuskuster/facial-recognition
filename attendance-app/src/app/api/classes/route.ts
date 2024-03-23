@@ -37,6 +37,9 @@ export async function POST(request: Request) {
 
   const result = createClassSchema.safeParse(body);
 
+  console.log(result);
+  console.log(body);
+
   try {
     if (!result.success) {
       throw new ValidationError(`Validation error: ${result.error.message}`);

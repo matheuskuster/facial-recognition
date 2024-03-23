@@ -77,7 +77,7 @@ export const columns: ColumnDef<Attendance>[] = [
             <AvatarImage src={row.original.photoUrl} alt="Foto" className="object-cover" />
             <AvatarFallback>{String(date)}</AvatarFallback>
           </Avatar>
-          <div>{row.getValue('name')}</div>
+          <div>{row.getValue('date')}</div>
         </div>
       );
     },
@@ -139,18 +139,30 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
 
     setIsAddingAttendance(true);
 
-    const formData = new FormData();
-    formData.append('classId', newAttendance.classId);
-    formData.append('date', newAttendance?.date);
-    formData.append('photo', newAttendance.photo);
+    // const formData = new FormData();
+    // formData.append('classId', newAttendance.classId);
+    // formData.append('date', newAttendance?.date);
+    // formData.append('photo', newAttendance.photo);
+
+    const sendBody = {
+      classId: newAttendance.classId,
+      date: newAttendance.date,
+      photo: newAttendance.photo,
+    };
+
+    // console.log("Form Data: " + JSON.stringify(formData));
+    console.log("New Class: " + JSON.stringify(newAttendance));
+    console.log("Send Body: "+JSON.stringify(sendBody));
+    // console.log(formData);
+    console.log(newAttendance);
+    console.log(sendBody);
 
     try {
-      await api.post('/attendances', formData, {
+      await api.post('/attendances', sendBody, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'content-type': 'application/json',
         },
       });
-
       toast.success('Presença adicionada com sucesso');
 
       setNewAttendance({

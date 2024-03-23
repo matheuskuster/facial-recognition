@@ -37,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+// import logger from '@/logger';
 import { api } from '@/services/api';
 
 export type Class = {
@@ -144,7 +145,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
     name: '',
     abbreviation: '',
     teacher: '',
-    totalHours: 0,
+    totalHours: 80,
     students: [],
   });
 
@@ -179,15 +180,31 @@ export function ClassesTable({ classes }: ClassesTableProps) {
 
     setIsAddingClass(true);
 
-    const formData = new FormData();
-    formData.append('name', newClass.name);
-    formData.append('abbreviation', newClass.abbreviation);
-    formData.append('teacher', newClass.teacher);
+    // const formData = new FormData();
+    // formData.append('name', newClass.name);
+    // formData.append('abbreviation', newClass.abbreviation);
+    // formData.append('teacher', newClass.teacher);
     // formData.append('totalHours', newClass.totalHours);
+
+    const sendBody = {
+      name: newClass.name,
+      abbreviation: newClass.abbreviation,
+      teacher: newClass.teacher,
+      totalHours: newClass.totalHours,
+      students: newClass.students,
+    };
+
+    // console.log("Form Data: " + JSON.stringify(formData));
+    console.log("New Class: " + JSON.stringify(newClass));
+    console.log("Send Body: "+JSON.stringify(sendBody));
+    // console.log(formData);
+    console.log(newClass);
+    console.log(sendBody);
+
     try {
-      await api.post('/classes', formData, {
+      await api.post('/classes', sendBody, {
         headers: {
-          'Content-Type': 'multipart/form-data',
+          'content-type': 'application/json',
         },
       });
 
@@ -197,7 +214,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
         name: '',
         abbreviation: '',
         teacher: '',
-        totalHours: 0,
+        totalHours: 80,
         students: [],
       });
 
