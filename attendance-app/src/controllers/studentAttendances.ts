@@ -41,4 +41,14 @@ export class StudentAttendancesController {
   static async delete(id: string) {
     await prisma.studentAttendance.delete({ where: { id } });
   }
+
+  static async processReport(attendanceId: string, report: Record<string, boolean>) {
+    const promises: Promise<unknown>[] = [];
+
+    for (const [studentId, present] of Object.entries(report)) {
+      promises.push(StudentAttendancesController.create({ attendanceId, studentId, present }));
+    }
+
+    return Promise.all(promises);
+  }
 }

@@ -35,6 +35,7 @@ model Attendance {
   classId  String   @map("class_id")
   date     DateTime
   photoUrl String?  @map("photo_url")
+  status   String
 
   @@index([classId, date])
   @@index([date])

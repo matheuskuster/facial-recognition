@@ -4,10 +4,12 @@ interface CreateAttendance {
   classId: string;
   date: Date;
   photoUrl?: string;
+  status: 'processed' | 'pending';
 }
 
 interface UpdateAttendance {
   photoUrl?: string;
+  status?: 'processed' | 'pending';
 }
 
 export class AttendancesController {
