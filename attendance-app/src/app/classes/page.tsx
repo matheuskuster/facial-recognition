@@ -16,7 +16,7 @@ export default async function Classes() {
   const classes = await fetchClasses();
   return (
     <div className="w-full h-full p-12">
-      <SectionHeader title="Turmas" description="Aqui você pode visualizar as Turmas cadastradas" />
+      <SectionHeader title="Turmas" description="Aqui você pode visualizar as turmas cadastradas" />
       <main>
         <ClassesTable classes={classes} />
       </main>

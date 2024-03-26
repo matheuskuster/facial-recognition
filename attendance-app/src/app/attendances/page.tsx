@@ -17,8 +17,8 @@ export default async function Attendances() {
   return (
     <div className="w-full h-full p-12">
       <SectionHeader
-        title="Presenças"
-        description="Aqui você pode visualizar as Chamadas cadastradas"
+        title="Chamadas"
+        description="Aqui você pode visualizar e criar chamadas"
       />
       <main>
         <AttendancesTable attendances={attendances} />

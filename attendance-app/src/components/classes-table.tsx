@@ -16,7 +16,6 @@ import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { toast } from 'sonner';
 
-// import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -37,7 +36,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-// import logger from '@/logger';
 import { api } from '@/services/api';
 
 export type Class = {
@@ -50,11 +48,6 @@ export type Class = {
 };
 
 export const columns: ColumnDef<Class>[] = [
-  // {
-  //   accessorKey: 'registration',
-  //   header: 'Matrícula',
-  //   cell: ({ row }) => <p className="capitalize font-bold ">{row.getValue('registration')}</p>,
-  // },
   {
     accessorKey: 'name',
     header: ({ column }) => {
@@ -72,26 +65,22 @@ export const columns: ColumnDef<Class>[] = [
     cell: ({ row }) => {
       return (
         <div className="flex items-center space-x-2">
-          {/* <p className="w-10 h-10">{name}</p> */}
           <div>{row.getValue('name')}</div>
         </div>
       );
     },
     filterFn: (row, _, value) => {
-      const { name } = row.original;
-      const concat = `${name}`.toLowerCase();
+      const { name, abbreviation } = row.original;
+      const concat = `${name} - ${abbreviation}`.toLowerCase();
       return concat.includes(value.toLowerCase());
     },
   },
   {
     accessorKey: 'abbreviation',
-    header: 'Abreviação',
+    header: 'Código',
     cell: ({ row }) => {
-      // const abbr = row.getValue('abbreviation') as string;
-
       return (
         <div className="flex items-center space-x-2">
-          {/* <p className="w-10 h-10">{abbr}</p> */}
           <div>{row.getValue('abbreviation')}</div>
         </div>
       );
@@ -101,12 +90,11 @@ export const columns: ColumnDef<Class>[] = [
     accessorKey: 'teacher',
     header: 'Professor',
     cell: ({ row }) => {
-      const teachers = row.getValue('teacher') as string;
+      const teacher = row.getValue('teacher') as string;
 
       return (
         <div className="flex items-center space-x-2">
-          <p className="w-10 h-10">{teachers}</p>
-          {/* <div>{row.getValue('teachers')}</div> */}
+          <p className="w-10 h-10">{teacher}</p>
         </div>
       );
     },
@@ -115,10 +103,8 @@ export const columns: ColumnDef<Class>[] = [
     accessorKey: 'totalHours',
     header: 'Total de Horas',
     cell: ({ row }) => {
-      // const totalHours = row.getValue('totalHours') as number;
       return (
         <div className="flex items-center space-x-2">
-          {/* <p className="w-10 h-10">{totalHours}</p> */}
           <div>{row.getValue('totalHours')}</div>
         </div>
       );
@@ -139,13 +125,13 @@ export function ClassesTable({ classes }: ClassesTableProps) {
     name: string;
     abbreviation: string;
     teacher: string;
-    totalHours: number;
+    totalHours: string;
     students: string[];
   }>({
     name: '',
     abbreviation: '',
     teacher: '',
-    totalHours: 80,
+    totalHours: '80',
     students: [],
   });
 
@@ -180,26 +166,13 @@ export function ClassesTable({ classes }: ClassesTableProps) {
 
     setIsAddingClass(true);
 
-    // const formData = new FormData();
-    // formData.append('name', newClass.name);
-    // formData.append('abbreviation', newClass.abbreviation);
-    // formData.append('teacher', newClass.teacher);
-    // formData.append('totalHours', newClass.totalHours);
-
     const sendBody = {
       name: newClass.name,
       abbreviation: newClass.abbreviation,
       teacher: newClass.teacher,
-      totalHours: newClass.totalHours,
+      totalHours: Number(newClass.totalHours),
       students: newClass.students,
     };
-
-    // console.log("Form Data: " + JSON.stringify(formData));
-    console.log('New Class: ' + JSON.stringify(newClass));
-    console.log('Send Body: ' + JSON.stringify(sendBody));
-    // console.log(formData);
-    console.log(newClass);
-    console.log(sendBody);
 
     try {
       await api.post('/classes', sendBody, {
@@ -214,7 +187,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
         name: '',
         abbreviation: '',
         teacher: '',
-        totalHours: 80,
+        totalHours: '80',
         students: [],
       });
 
@@ -290,7 +263,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
                     setNewClass((prev) => ({ ...prev, teacher: event.target.value }))
                   }
                 />
-                {/* <Label htmlFor="totalHours" className="text-right">
+                <Label htmlFor="totalHours" className="text-right">
                   Total de Horas
                 </Label>
                 <Input
@@ -301,7 +274,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
                   onChange={(event) =>
                     setNewClass((prev) => ({ ...prev, totalHours: event.target.value }))
                   }
-                /> */}
+                />
               </div>
             </div>
             <DialogFooter>

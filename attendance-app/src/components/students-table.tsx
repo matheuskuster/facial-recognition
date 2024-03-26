@@ -170,11 +170,6 @@ export function StudentsTable({ students }: StudentsTableProps) {
     formData.append('registration', newStudent.registration);
     formData.append('photo', newStudent.photo);
 
-    console.log('Form Data: ' + JSON.stringify(formData));
-    console.log('New Student: ' + JSON.stringify(newStudent));
-    console.log(formData);
-    console.log(newStudent);
-
     try {
       await api.post('/students', formData, {
         headers: {

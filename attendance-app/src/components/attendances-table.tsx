@@ -12,6 +12,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 import { ArrowUpDown, Plus } from 'lucide-react';
+import { DateTime } from 'luxon';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { toast } from 'sonner';
@@ -68,20 +69,20 @@ export const columns: ColumnDef<Attendance>[] = [
       );
     },
     cell: ({ row }) => {
-        const stringDate = String(row.original.date)
-        const [date, timeAndZone] = stringDate.split('T')
-        const [year, month, day] = date.split('-')
-        const formattedDate = `${day}/${month}/${year}`
-        const [time, timeZoneCode] = timeAndZone.split('.')
-        const formattedTime = time
-        const formattedDateTime = `${formattedDate} às ${formattedTime}`
+      const stringDate = row.original.date.toLocaleDateString();
+      // const [date, timeAndZone] = stringDate.split('T');
+      // const [year, month, day] = date.split('-');
+      // const formattedDate = `${day}/${month}/${year}`;
+      // const [time, timeZoneCode] = timeAndZone.split('.');
+      // const formattedTime = time;
+      // const formattedDateTime = `${formattedDate} às ${formattedTime}`;
 
-        return (
+      return (
         <div>
-          <p className="flex items-center space-x-2">{formattedDateTime}</p>
-          </div>
-        ) 
-      },
+          <p className="flex items-center space-x-2">{stringDate}</p>
+        </div>
+      );
+    },
     filterFn: (row, _, value) => {
       const { date, classId } = row.original;
       const concat = `${date}${classId}`.toLowerCase();
@@ -101,11 +102,11 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
 
   const [newAttendance, setNewAttendance] = React.useState<{
     classId: string;
-    date: Date;
+    date: DateTime;
     photo: File | null;
   }>({
     classId: '',
-    date: new Date(),
+    date: DateTime.now(),
     photo: null,
   });
 
@@ -140,35 +141,22 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
 
     setIsAddingAttendance(true);
 
-    // const formData = new FormData();
-    // formData.append('classId', newAttendance.classId);
-    // formData.append('date', newAttendance?.date);
-    // formData.append('photo', newAttendance.photo);
-
-    const sendBody = {
-      classId: newAttendance.classId,
-      date: new Date(),
-      photo: newAttendance.photo,
-    };
-
-    // console.log("Form Data: " + JSON.stringify(formData));
-    console.log('New Attendance: ' + JSON.stringify(newAttendance));
-    console.log('Send Body: ' + JSON.stringify(sendBody));
-    // console.log(formData);
-    console.log(newAttendance);
-    console.log(sendBody);
+    const formData = new FormData();
+    formData.append('classId', newAttendance.classId);
+    formData.append('date', String(newAttendance?.date));
+    formData.append('photo', newAttendance.photo);
 
     try {
-      await api.post('/attendances', sendBody, {
+      await api.post('/attendances', formData, {
         headers: {
-          'content-type': 'application/json',
+          'Content-Type': 'multipart/form-data',
         },
       });
       toast.success('Presença adicionada com sucesso');
 
       setNewAttendance({
         classId: '',
-        date: new Date(),
+        date: DateTime.now(),
         photo: null,
       });
 
@@ -201,17 +189,29 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
           </DialogTrigger>
           <DialogContent className="w-[500px]">
             <DialogHeader>
-              <DialogTitle>Adicionar Presença</DialogTitle>
+              <DialogTitle>Adicionar Chamada</DialogTitle>
               <DialogDescription>
-                Preencha os campos abaixo para adicionar uma nova Presença.
+                Preencha os campos abaixo para adicionar uma nova chamada.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="name" className="text-right">
-                  ID Turma
+                  Turma
                 </Label>
-                <Input
+                <select className="col-span-3" >
+                  <option>
+
+                  </option>
+                </select>
+
+                {/* <select name="classId" className="col-span-3">
+                  {FBButtons.map((fbb) => {
+                    <option key={fbb.key} value={fbb.key}>{fbb.value}</option>
+                  })};
+                </select> */}
+
+                {/* <Input
                   id="classId"
                   placeholder="0a0a0a-0a0a0a0a-0a0a0a0a-0a0a0a0"
                   className="col-span-3"
@@ -219,22 +219,8 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
                   onChange={(event) =>
                     setNewAttendance((prev) => ({ ...prev, classId: event.target.value }))
                   }
-                />
+                /> */}
               </div>
-              {/* <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="registration" className="text-right">
-                  Data
-                </Label>
-                <Input
-                  id="date"
-                  placeholder="2024-03-21"
-                  className="col-span-3"
-                  value={newAttendance?.date}
-                  onChange={(event) =>
-                    setNewAttendance((prev) => ({ ...prev, date: event.target.value }))
-                  }
-                />
-              </div> */}
 
               <div className="grid grid-cols-4 items-center gap-4">
                 <Label htmlFor="photo" className="text-right">
