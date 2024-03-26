@@ -99,6 +99,11 @@ def process_image():
       if presence_report is None:
         return "Error processing attendance image", 500
 
+
+      # Send presence report to webhook
+      WEBHOOK_URL = "http://localhost:3000/api/attendances/{attendanceId}/webhook".format(attendanceId=attendanceId)
+      response = requests.post(WEBHOOK_URL, json={"attendanceId": attendanceId, "report": presence_report})
+
       return jsonify({"message": "Presence report generated", "presence_report": presence_report}), 200
 
     except Exception as e:
