@@ -11,6 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+
 import { ArrowUpDown, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useRouter } from 'next/navigation';
@@ -19,6 +20,7 @@ import { toast } from 'sonner';
 
 import { FileDropzone } from './file-dropzone';
 
+import { Class as ClassType } from '@/components/classes-table';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -48,6 +50,18 @@ export type Attendance = {
   photoUrl: string;
 };
 
+// async function getClasses(): Promise<ClassType[]> {
+//   try {
+//     const response = await api.get('/classes');
+//     return response.data.classes as ClassType[];
+//   } catch (error) {
+//     console.error('Failed to fetch classes', error);
+//     return [];
+//   }
+// }
+
+// const x = await getClasses();
+
 export const columns: ColumnDef<Attendance>[] = [
   {
     accessorKey: 'classId',
@@ -68,8 +82,8 @@ export const columns: ColumnDef<Attendance>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => {
-      const stringDate = row.original.date.toLocaleDateString();
+    cell: ({ row: string }) => {
+      const stringDate = String(row.original.date.toISOString());
       // const [date, timeAndZone] = stringDate.split('T');
       // const [year, month, day] = date.split('-');
       // const formattedDate = `${day}/${month}/${year}`;
@@ -199,16 +213,14 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
                 <Label htmlFor="name" className="text-right">
                   Turma
                 </Label>
-                <select className="col-span-3" >
-                  <option>
-
-                  </option>
-                </select>
-
                 {/* <select name="classId" className="col-span-3">
-                  {FBButtons.map((fbb) => {
-                    <option key={fbb.key} value={fbb.key}>{fbb.value}</option>
-                  })};
+                  {x.map((x) => {
+                    return (
+                      <option key={x.id} value={x.name}>
+                        {`${x.name} - ${x.abbreviation}`}
+                      </option>
+                    );
+                  })}
                 </select> */}
 
                 {/* <Input

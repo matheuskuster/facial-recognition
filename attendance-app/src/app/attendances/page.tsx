@@ -1,4 +1,4 @@
-import { Attendance as AttendanceType, AttendancesTable } from '@/components/attendances-tabe';
+import { Attendance as AttendanceType, AttendancesTable } from '@/components/attendances-table';
 import { SectionHeader } from '@/components/section-header';
 import { api } from '@/services/api';
 
@@ -16,10 +16,7 @@ export default async function Attendances() {
   const attendances = await fetchAttendances();
   return (
     <div className="w-full h-full p-12">
-      <SectionHeader
-        title="Chamadas"
-        description="Aqui você pode visualizar e criar chamadas"
-      />
+      <SectionHeader title="Chamadas" description="Aqui você pode visualizar e criar chamadas" />
       <main>
         <AttendancesTable attendances={attendances} />
       </main>
