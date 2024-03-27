@@ -11,7 +11,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-
 import { ArrowUpDown, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useRouter } from 'next/navigation';
