@@ -62,18 +62,19 @@ async function Classes(): Promise<ClassType[]> {
 }
 
 const getClasses = async () => {
-  const data = await Classes()
-    .then((response) => 
-    response.map((e) => ({ value: e.id, label: e.name })));
+  const data = await Classes().then((response) =>
+    response.map((e) => ({ value: e.id, label: e.name })),
+  );
   return data;
 };
 
 const matchName = async (classId: any) => {
-  const a = await getClasses()
+  const a = await getClasses();
   const name = a.map((object) => {
     if (object.value == classId) {
       return object.label;
-    }});
+    }
+  });
   const index = name.filter((object) => object != undefined);
   return index[0] as string;
 };
