@@ -1,0 +1,12 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "server": "localhost",
+            "driver": "PostgreSQL",
+            "name": "dockerDB",
+            "connectString": "postgresql://docker:docker@localhost:5432/facial-recognition-db",
+            "connectionTimeout": 10000
+        }
+    ]
+}

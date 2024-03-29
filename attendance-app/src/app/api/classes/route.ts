@@ -25,7 +25,6 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const body = await request.json();
-
   logger.info(`Creating a new class [${body.name}]`);
 
   const createClassSchema = z.object({
