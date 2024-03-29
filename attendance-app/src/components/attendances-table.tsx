@@ -3,6 +3,7 @@
 import {
   ColumnDef,
   ColumnFiltersState,
+  RowSelection,
   SortingState,
   VisibilityState,
   flexRender,
@@ -15,6 +16,7 @@ import { ArrowUpDown, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
+import AsyncSelect from 'react-select/async';
 import { toast } from 'sonner';
 
 import { FileDropzone } from './file-dropzone';
@@ -45,27 +47,47 @@ import { api } from '@/services/api';
 export type Attendance = {
   id: string;
   classId: string;
-  date: Date;
+  date: DateTime;
   photoUrl: string;
 };
 
-// async function getClasses(): Promise<ClassType[]> {
-//   try {
-//     const response = await api.get('/classes');
-//     return response.data.classes as ClassType[];
-//   } catch (error) {
-//     console.error('Failed to fetch classes', error);
-//     return [];
-//   }
-// }
+async function Classes(): Promise<ClassType[]> {
+  try {
+    const response = await api.get('/classes');
+    return response.data.classes as ClassType[];
+  } catch (error) {
+    console.error('Failed to fetch classes', error);
+    return [];
+  }
+}
 
-// const x = await getClasses();
+const getClasses = async () => {
+  const data = await Classes()
+    .then((response) => 
+    response.map((e) => ({ value: e.id, label: e.name })));
+  return data;
+};
+
+const matchName = async (classId: any) => {
+  const a = await getClasses()
+  const name = a.map((object) => {
+    if (object.value == classId) {
+      return object.label;
+    }});
+  const index = name.filter((object) => object != undefined);
+  return index[0] as string;
+};
 
 export const columns: ColumnDef<Attendance>[] = [
   {
     accessorKey: 'classId',
-    header: 'ID Turma',
-    cell: ({ row }) => <p className="capitalize font-bold ">{row.getValue('classId')}</p>,
+    header: 'Turma',
+    cell: ({ row }) => {
+      const className = matchName(row.original.classId).then((object) => {
+        return object as string;
+      });
+      return <p className="capitalize font-bold ">{String(className)}</p>;
+    },
   },
   {
     accessorKey: 'date',
@@ -81,18 +103,13 @@ export const columns: ColumnDef<Attendance>[] = [
         </Button>
       );
     },
-    cell: ({ row: string }) => {
-      const stringDate = String(row.original.date.toISOString());
-      // const [date, timeAndZone] = stringDate.split('T');
-      // const [year, month, day] = date.split('-');
-      // const formattedDate = `${day}/${month}/${year}`;
-      // const [time, timeZoneCode] = timeAndZone.split('.');
-      // const formattedTime = time;
-      // const formattedDateTime = `${formattedDate} às ${formattedTime}`;
+    cell: ({ row }) => {
+      const stringDate = row.original.date as DateTime;
+      const formattedDateTime = stringDate.toFormat('yyyy LLL dd');
 
       return (
         <div>
-          <p className="flex items-center space-x-2">{stringDate}</p>
+          <p className="flex items-center space-x-2">{formattedDateTime}</p>
         </div>
       );
     },
@@ -127,6 +144,7 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
+  const [isClearable, setIsClearable] = React.useState(true);
 
   const table = useReactTable({
     data: attendances,
@@ -158,7 +176,6 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
     formData.append('classId', newAttendance.classId);
     formData.append('date', String(newAttendance?.date));
     formData.append('photo', newAttendance.photo);
-
     try {
       await api.post('/attendances', formData, {
         headers: {
@@ -212,25 +229,19 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
                 <Label htmlFor="name" className="text-right">
                   Turma
                 </Label>
-                {/* <select name="classId" className="col-span-3">
-                  {x.map((x) => {
-                    return (
-                      <option key={x.id} value={x.name}>
-                        {`${x.name} - ${x.abbreviation}`}
-                      </option>
-                    );
-                  })}
-                </select> */}
-
-                {/* <Input
-                  id="classId"
-                  placeholder="0a0a0a-0a0a0a0a-0a0a0a0a-0a0a0a0"
+                <AsyncSelect
                   className="col-span-3"
-                  value={newAttendance?.classId}
-                  onChange={(event) =>
-                    setNewAttendance((prev) => ({ ...prev, classId: event.target.value }))
+                  cacheOptions
+                  isClearable={isClearable}
+                  loadOptions={getClasses}
+                  onInputChange={(data) => {
+                    console.log(data);
+                  }}
+                  onChange={(event: any) =>
+                    setNewAttendance((prev) => ({ ...prev, classId: event.value }))
                   }
-                /> */}
+                  defaultOptions
+                />
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">
