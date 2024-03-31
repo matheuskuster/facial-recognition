@@ -75,6 +75,8 @@ def generate_presence_report(attendance_image_path, student_images):
 
 @app.route("/process_image", methods=["POST"])
 def process_image():
+  print("Processing image")
+
   if request.method == "POST":
     data = request.get_json()
     attendanceId = data.get("attendanceId")
@@ -112,4 +114,4 @@ def process_image():
     return "This endpoint only accepts POST requests", 405
 
 if __name__ == "__main__":
-  app.run(debug=True)
+  app.run(port=8000, debug=True)

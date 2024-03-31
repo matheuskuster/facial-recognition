@@ -3,7 +3,6 @@
 import {
   ColumnDef,
   ColumnFiltersState,
-  RowSelection,
   SortingState,
   VisibilityState,
   flexRender,
@@ -12,16 +11,27 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, Plus } from 'lucide-react';
+import { ArrowDown, ArrowUp, Check, Plus } from 'lucide-react';
 import { DateTime } from 'luxon';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
-import AsyncSelect from 'react-select/async';
 import { toast } from 'sonner';
 
+import { Class } from './classes-table';
 import { FileDropzone } from './file-dropzone';
+import { Spinner } from './spinner';
+import { Student } from './students-table';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
+import { Switch } from './ui/switch';
 
-import { Class as ClassType } from '@/components/classes-table';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -47,47 +57,34 @@ import { api } from '@/services/api';
 export type Attendance = {
   id: string;
   classId: string;
-  date: DateTime;
+  date: string;
   photoUrl: string;
-};
-
-async function Classes(): Promise<ClassType[]> {
-  try {
-    const response = await api.get('/classes');
-    return response.data.classes as ClassType[];
-  } catch (error) {
-    console.error('Failed to fetch classes', error);
-    return [];
-  }
-}
-
-const getClasses = async () => {
-  const data = await Classes().then((response) =>
-    response.map((e) => ({ value: e.id, label: e.name })),
-  );
-  return data;
-};
-
-const matchName = async (classId: any) => {
-  const a = await getClasses();
-  const name = a.map((object) => {
-    if (object.value == classId) {
-      return object.label;
-    }
-  });
-  const index = name.filter((object) => object != undefined);
-  return index[0] as string;
+  status: 'processed' | 'pending';
+  studentAttendances: {
+    id: string;
+    present: boolean;
+    studentId: string;
+  }[];
+  class: {
+    name: string;
+  };
 };
 
 export const columns: ColumnDef<Attendance>[] = [
   {
-    accessorKey: 'classId',
+    accessorKey: 'photo',
+    header: 'Imagem',
+    cell: ({ row }) => {
+      return (
+        <img src={row.original.photoUrl} alt="Foto da Chamada" className="w-12 h-12 rounded-full" />
+      );
+    },
+  },
+  {
+    accessorKey: 'class',
     header: 'Turma',
     cell: ({ row }) => {
-      const className = matchName(row.original.classId).then((object) => {
-        return object as string;
-      });
-      return <p className="capitalize font-bold ">{String(className)}</p>;
+      return <p className="capitalize font-bold ">{row.original.class.name}</p>;
     },
   },
   {
@@ -100,13 +97,14 @@ export const columns: ColumnDef<Attendance>[] = [
           onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
         >
           Data
-          <ArrowUpDown className="ml-2 h-4 w-4" />
+          {column.getIsSorted() === 'asc' && <ArrowUp className="ml-2 h-4 w-4" />}
+          {column.getIsSorted() === 'desc' && <ArrowDown className="ml-2 h-4 w-4" />}
         </Button>
       );
     },
     cell: ({ row }) => {
-      const stringDate = row.original.date as DateTime;
-      const formattedDateTime = stringDate.toFormat('yyyy LLL dd');
+      const stringDate = DateTime.fromISO(row.original.date);
+      const formattedDateTime = stringDate.toFormat('dd/MM/yyyy HH:mm');
 
       return (
         <div>
@@ -114,30 +112,169 @@ export const columns: ColumnDef<Attendance>[] = [
         </div>
       );
     },
-    filterFn: (row, _, value) => {
-      const { date, classId } = row.original;
-      const concat = `${date}${classId}`.toLowerCase();
-      return concat.includes(value.toLowerCase());
+  },
+  {
+    accessorKey: 'status',
+    header: 'Status',
+    cell: ({ row }) => {
+      const status = row.original.status;
+
+      return status === 'pending' ? (
+        <div className="flex items-center space-x-2">
+          <Spinner className="h-5 w-5" />
+          <span>Processando</span>
+        </div>
+      ) : (
+        <div className="flex items-center space-x-2">
+          <Check className="h-5 w-5 text-green-500" />
+          <span>Finalizado</span>
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: 'attendance',
+    header: 'Comparecimento',
+    cell: ({ row }) => {
+      const status = row.original.status;
+
+      const attendances = row.original.studentAttendances;
+      const present = attendances.filter((attendance) => attendance.present).length;
+
+      return status === 'processed' ? (
+        <p className="font-medium">
+          {present}/{attendances.length}
+        </p>
+      ) : (
+        <p className="font-medium">-</p>
+      );
+    },
+  },
+  {
+    accessorKey: 'actions',
+    header: '',
+    cell: ({ row, table }) => {
+      // @ts-ignore
+      const { students } = table.options.meta;
+
+      const onDelete = async () => {
+        try {
+          await api.delete(`/attendances/${row.original.id}`);
+          toast.success('Chamada excluída com sucesso');
+        } catch {
+          toast.error('Erro ao excluir chamada');
+        }
+      };
+
+      return (
+        <div className="flex items-center space-x-2">
+          <EditAttendance
+            studentAttendances={row.original.studentAttendances}
+            students={students}
+          />
+          <Button variant="destructive" size="sm" onClick={onDelete}>
+            Excluir
+          </Button>
+        </div>
+      );
     },
   },
 ];
 
-type AttendancesTableProps = {
-  attendances: Attendance[];
+type StudentAttendance = {
+  id: string;
+  present: boolean;
+  studentId: string;
 };
 
-export function AttendancesTable({ attendances }: AttendancesTableProps) {
+type EditAttendanceProps = {
+  studentAttendances: StudentAttendance[];
+  students: Student[];
+};
+
+function EditAttendance({ studentAttendances, students }: EditAttendanceProps) {
+  const [attendances, setAttendances] = React.useState(
+    studentAttendances.map((attendance) => {
+      const studentData = students.find((s) => s.id === attendance.studentId);
+
+      return {
+        ...studentData,
+        present: attendance.present,
+        attendanceId: attendance.id,
+      };
+    }),
+  );
+
+  const updateStudentAttendance = async (attendanceId: string, present: boolean) => {
+    try {
+      await api.put(`/student-attendances/${attendanceId}`, {
+        present,
+      });
+
+      toast.success('Presença atualizada com sucesso');
+    } catch {
+      toast.error('Erro ao atualizar presença');
+    }
+  };
+
+  const onTogglePresent = (attendanceId: string, checked: boolean) => {
+    setAttendances((prev) =>
+      prev.map((attendance) =>
+        attendance.attendanceId === attendanceId ? { ...attendance, present: checked } : attendance,
+      ),
+    );
+
+    updateStudentAttendance(attendanceId, checked);
+  };
+
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="sm">
+          Editar
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Editar chamada</DialogTitle>
+          <DialogDescription>Altere o comparecimento dos alunos abaixo.</DialogDescription>
+        </DialogHeader>
+
+        <div className="space-y-4">
+          {attendances.map((student) => (
+            <div className="flex items-center w-full" key={student.attendanceId}>
+              <img src={student.photoUrl} alt="Foto do Aluno" className="w-8 h-8 rounded-full" />
+              <p className="ml-2 font-medium">{student.name}</p>
+
+              <Switch
+                onCheckedChange={(checked) => onTogglePresent(student.attendanceId, checked)}
+                className="ml-auto"
+                checked={student.present}
+              />
+            </div>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+type AttendancesTableProps = {
+  attendances: Attendance[];
+  classes: Class[];
+  students: Student[];
+};
+
+export function AttendancesTable({ attendances, classes, students }: AttendancesTableProps) {
   const router = useRouter();
   const [isAddingAttendance, setIsAddingAttendance] = React.useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
 
   const [newAttendance, setNewAttendance] = React.useState<{
     classId: string;
-    date: DateTime;
     photo: File | null;
   }>({
     classId: '',
-    date: DateTime.now(),
     photo: null,
   });
 
@@ -145,7 +282,6 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({});
   const [rowSelection, setRowSelection] = React.useState({});
-  const [isClearable, setIsClearable] = React.useState(true);
 
   const table = useReactTable({
     data: attendances,
@@ -163,6 +299,9 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
       columnVisibility,
       rowSelection,
     },
+    meta: {
+      students,
+    },
   });
 
   const createAttendance = async () => {
@@ -175,19 +314,20 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
 
     const formData = new FormData();
     formData.append('classId', newAttendance.classId);
-    formData.append('date', String(newAttendance?.date));
+    formData.append('date', String(DateTime.now().toISO()));
     formData.append('photo', newAttendance.photo);
+
     try {
       await api.post('/attendances', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
       });
-      toast.success('Presença adicionada com sucesso');
+
+      toast.success('Chamada adicionada com sucesso');
 
       setNewAttendance({
         classId: '',
-        date: DateTime.now(),
         photo: null,
       });
 
@@ -195,7 +335,7 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
 
       router.refresh();
     } catch {
-      toast.error('Erro ao adicionar Presença');
+      toast.error('Erro ao adicionar chamada');
     } finally {
       setIsAddingAttendance(false);
     }
@@ -205,9 +345,9 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Buscar Presenças..."
-          value={(table.getColumn('classId')?.getFilterValue() as string) ?? ''}
-          onChange={(event) => table.getColumn('classId')?.setFilterValue(event.target.value)}
+          placeholder="Buscar chamadas..."
+          value={(table.getColumn('class')?.getFilterValue() as string) ?? ''}
+          onChange={(event) => table.getColumn('class')?.setFilterValue(event.target.value)}
           className="max-w-sm"
         />
 
@@ -215,12 +355,12 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
           <DialogTrigger asChild>
             <Button className="ml-auto">
               <Plus className="h-6 w-6 mr-2" />
-              Adicionar Presença
+              Adicionar chamada
             </Button>
           </DialogTrigger>
           <DialogContent className="w-[500px]">
             <DialogHeader>
-              <DialogTitle>Adicionar Chamada</DialogTitle>
+              <DialogTitle>Adicionar chamada</DialogTitle>
               <DialogDescription>
                 Preencha os campos abaixo para adicionar uma nova chamada.
               </DialogDescription>
@@ -230,19 +370,27 @@ export function AttendancesTable({ attendances }: AttendancesTableProps) {
                 <Label htmlFor="name" className="text-right">
                   Turma
                 </Label>
-                <AsyncSelect
-                  className="col-span-3"
-                  cacheOptions
-                  isClearable={isClearable}
-                  loadOptions={getClasses}
-                  onInputChange={(data) => {
-                    console.log(data);
-                  }}
-                  onChange={(event: any) =>
-                    setNewAttendance((prev) => ({ ...prev, classId: event.value }))
+
+                <Select
+                  value={newAttendance.classId}
+                  onValueChange={(value) =>
+                    setNewAttendance((prev) => ({ ...prev, classId: value }))
                   }
-                  defaultOptions
-                />
+                >
+                  <SelectTrigger className="col-span-3 w-full">
+                    <SelectValue placeholder="Selecione uma turma" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Turmas</SelectLabel>
+                      {classes.map((classItem) => (
+                        <SelectItem key={classItem.id} value={classItem.id}>
+                          {classItem.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="grid grid-cols-4 items-center gap-4">

@@ -16,7 +16,7 @@ export default function Sidebar({ className }: SidebarProps) {
           <h2 className="mb-2 px-4 text-lg font-semibold tracking-tight">Menu</h2>
           <div className="space-y-1">
             <NavItem label="Chamadas" pathname="/attendances" icon={Calendar} />
-            <NavItem label="Turmas" pathname="/classes" icon={Book} />
+            <NavItem label="Matérias" pathname="/classes" icon={Book} />
             <NavItem label="Alunos" pathname="/students" icon={Users} />
           </div>
         </div>

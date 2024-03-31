@@ -11,7 +11,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { ArrowUpDown, Plus } from 'lucide-react';
+import { ArrowUpDown, Plus, Trash } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { toast } from 'sonner';
@@ -95,10 +95,9 @@ export const columns: ColumnDef<Student>[] = [
   },
   {
     accessorKey: 'classes',
-    header: 'Turmas',
+    header: 'Matérias',
     cell: ({ row }) => {
       const classes = row.getValue('classes') as string[];
-
       const diff = classes.length - 3;
 
       return (
@@ -110,6 +109,26 @@ export const columns: ColumnDef<Student>[] = [
           ))}
           {diff > 0 && <Badge variant="secondary">+{diff}</Badge>}
         </div>
+      );
+    },
+  },
+  {
+    id: 'actions',
+    header: 'Ações',
+    cell: ({ row }) => {
+      const deleteStudent = async () => {
+        try {
+          await api.delete(`/students/${row.original.id}`);
+          toast.success('Aluno deletado com sucesso');
+        } catch {
+          toast.error('Erro ao deletar aluno');
+        }
+      };
+
+      return (
+        <Button size="sm" variant="destructive" onClick={deleteStudent}>
+          Deletar <Trash className="h-4 w-4 ml-2" />
+        </Button>
       );
     },
   },

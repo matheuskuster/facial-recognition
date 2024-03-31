@@ -30,6 +30,14 @@ export class StudentsController {
     return student;
   }
 
+  static async findByClassId(classId: string) {
+    const students = await prisma.student.findMany({
+      where: { classes: { some: { id: classId } } },
+    });
+
+    return students;
+  }
+
   static async findAll() {
     const students = await prisma.student.findMany({
       include: { classes: true },

@@ -16,6 +16,9 @@ import { useRouter } from 'next/navigation';
 import * as React from 'react';
 import { toast } from 'sonner';
 
+import { MultiSelect } from './multi-select';
+import { Student } from './students-table';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -94,7 +97,7 @@ export const columns: ColumnDef<Class>[] = [
 
       return (
         <div className="flex items-center space-x-2">
-          <p className="w-10 h-10">{teacher}</p>
+          <p>{teacher}</p>
         </div>
       );
     },
@@ -114,10 +117,12 @@ export const columns: ColumnDef<Class>[] = [
 
 type ClassesTableProps = {
   classes: Class[];
+  students: Student[];
 };
 
-export function ClassesTable({ classes }: ClassesTableProps) {
+export function ClassesTable({ classes, students }: ClassesTableProps) {
   const router = useRouter();
+
   const [isAddingClass, setIsAddingClass] = React.useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = React.useState(false);
 
@@ -181,7 +186,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
         },
       });
 
-      toast.success('Turma adicionada com sucesso');
+      toast.success('Matéria adicionada com sucesso');
 
       setNewClass({
         name: '',
@@ -195,7 +200,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
 
       router.refresh();
     } catch {
-      toast.error('Erro ao adicionar turma');
+      toast.error('Erro ao adicionar matéria');
     } finally {
       setIsAddingClass(false);
     }
@@ -205,7 +210,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
     <div className="w-full">
       <div className="flex items-center py-4">
         <Input
-          placeholder="Buscar turmas..."
+          placeholder="Buscar matérias..."
           value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(event) => table.getColumn('name')?.setFilterValue(event.target.value)}
           className="max-w-sm"
@@ -215,14 +220,14 @@ export function ClassesTable({ classes }: ClassesTableProps) {
           <DialogTrigger asChild>
             <Button className="ml-auto">
               <Plus className="h-6 w-6 mr-2" />
-              Adicionar turma
+              Adicionar matéria
             </Button>
           </DialogTrigger>
           <DialogContent className="w-[500px]">
             <DialogHeader>
-              <DialogTitle>Adicionar turma</DialogTitle>
+              <DialogTitle>Adicionar matéria</DialogTitle>
               <DialogDescription>
-                Preencha os campos abaixo para adicionar uma nova turma.
+                Preencha os campos abaixo para adicionar uma nova matéria.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -232,7 +237,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
                 </Label>
                 <Input
                   id="name"
-                  placeholder="Ciência da Computação 6 Matutino"
+                  placeholder="Cálculo 5"
                   className="col-span-3"
                   value={newClass?.name}
                   onChange={(event) =>
@@ -244,7 +249,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
                 </Label>
                 <Input
                   id="abbreviation"
-                  placeholder="CC6M"
+                  placeholder="CALC5"
                   className="col-span-3"
                   value={newClass?.abbreviation}
                   onChange={(event) =>
@@ -263,6 +268,7 @@ export function ClassesTable({ classes }: ClassesTableProps) {
                     setNewClass((prev) => ({ ...prev, teacher: event.target.value }))
                   }
                 />
+
                 <Label htmlFor="totalHours" className="text-right">
                   Total de Horas
                 </Label>
@@ -270,10 +276,26 @@ export function ClassesTable({ classes }: ClassesTableProps) {
                   id="totalHours"
                   placeholder="80"
                   className="col-span-3"
+                  type="number"
                   value={newClass?.totalHours}
                   onChange={(event) =>
                     setNewClass((prev) => ({ ...prev, totalHours: event.target.value }))
                   }
+                />
+
+                <Label htmlFor="students" className="text-right">
+                  Estudantes
+                </Label>
+                <MultiSelect
+                  value={newClass.students}
+                  options={students.map((student) => ({
+                    label: `${student.name} (${student.registration})`,
+                    value: student.id,
+                  }))}
+                  placeholder="Selecione os estudantes..."
+                  onChange={(newStudents) => {
+                    setNewClass((prev) => ({ ...prev, students: newStudents }));
+                  }}
                 />
               </div>
             </div>

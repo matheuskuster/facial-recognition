@@ -25,7 +25,8 @@ model Class {
   teacher      String
   totalHours   Int    @map("total_hours")
 
-  students Student[]
+  students    Student[]
+  attendances Attendance[]
 
   @@map("classes")
 }
@@ -37,8 +38,9 @@ model Attendance {
   photoUrl String?  @map("photo_url")
   status   String
 
-  @@index([classId, date])
-  @@index([date])
+  class              Class               @relation(fields: [classId], references: [id])
+  studentAttendances StudentAttendance[]
+
   @@map("attendances")
 }
 
@@ -47,6 +49,8 @@ model StudentAttendance {
   studentId    String  @map("student_id")
   attendanceId String  @map("attendance_id")
   present      Boolean
+
+  attendance Attendance @relation(fields: [attendanceId], references: [id])
 
   @@index([studentId, attendanceId])
   @@map("student_attendances")

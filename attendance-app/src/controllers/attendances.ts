@@ -26,7 +26,12 @@ export class AttendancesController {
   }
 
   static async findAll() {
-    const attendances = await prisma.attendance.findMany();
+    const attendances = await prisma.attendance.findMany({
+      include: {
+        class: true,
+        studentAttendances: true,
+      },
+    });
 
     return { attendances };
   }
@@ -38,6 +43,7 @@ export class AttendancesController {
   }
 
   static async delete(id: string) {
+    await prisma.studentAttendance.deleteMany({ where: { attendanceId: id } });
     await prisma.attendance.delete({ where: { id } });
   }
 }
